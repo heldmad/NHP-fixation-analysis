@@ -73,3 +73,28 @@ line_betareg_short_m3_mDF <- predict(betareg_short_m3, short_mdf)
 
 # Model Tabel (with p-values) for short-term beta regression
 tab_model(betareg_short_m3, p.style = "scientific")
+
+
+## Long-term Storage
+long %>% group_by(Fixative, Hours_Fixed_numeric) %>% summarise(mean=mean(DV200_prop)) %>% arrange(Fixative,Hours_Fixed_numeric)
+betareg_long_m0 <- betareg(DV200_prop ~ 1, data = long)
+betareg_long_m1 <- betareg(DV200_prop ~ Fixative, data = long)
+betareg_long_m2 <- betareg(DV200_prop ~ Hours_Fixed_numeric, data = long)
+betareg_long_m3 <- betareg(DV200_prop ~ Fixative * Hours_Fixed_numeric, data = long)
+summary(betareg_long_m0)
+summary(betareg_long_m1)
+summary(betareg_long_m2)
+summary(betareg_long_m3)
+AIC(betareg_long_m0, betareg_long_m1, betareg_long_m2, betareg_long_m3)
+
+# Create Lines of Best Fit for each fixative type
+long_pfa <- long %>%
+  filter(long$Fixative == "PFA")
+long_mdf <- long %>%
+  filter(long$Fixative == "mDF")
+line_betareg_long_m3 <- predict(betareg_long_m3, long)
+line_betareg_long_m3_pfa <- predict(betareg_long_m3, long_pfa)
+line_betareg_long_m3_mDF <- predict(betareg_long_m3, long_mdf)
+
+# Model Tabel (with p-values) for long-term beta regression
+tab_model(betareg_long_m3, p.style = "scientific")
