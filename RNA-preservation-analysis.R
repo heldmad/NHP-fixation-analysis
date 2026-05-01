@@ -60,7 +60,10 @@ summary(betareg_short_m0)
 summary(betareg_short_m1)
 summary(betareg_short_m2)
 summary(betareg_short_m3)
-AIC(betareg_short_m0, betareg_short_m1, betareg_short_m2, betareg_short_m3)
+AIC(betareg_short_m0, 
+    betareg_short_m1, 
+    betareg_short_m2, 
+    betareg_short_m3)
 
 # Create Lines of Best Fit for each fixative type
 short_pfa <- short %>%
@@ -85,7 +88,10 @@ summary(betareg_long_m0)
 summary(betareg_long_m1)
 summary(betareg_long_m2)
 summary(betareg_long_m3)
-AIC(betareg_long_m0, betareg_long_m1, betareg_long_m2, betareg_long_m3)
+AIC(betareg_long_m0, 
+    betareg_long_m1, 
+    betareg_long_m2, 
+    betareg_long_m3)
 
 # Create Lines of Best Fit for each fixative type
 long_pfa <- long %>%
@@ -98,3 +104,37 @@ line_betareg_long_m3_mDF <- predict(betareg_long_m3, long_mdf)
 
 # Model Tabel (with p-values) for long-term beta regression
 tab_model(betareg_long_m3, p.style = "scientific")
+
+
+## All Storage (Combined)
+combined %>% group_by(Fixative, Hours_Fixed_numeric) %>% summarise(mean=mean(DV200_prop)) %>% arrange(Fixative,Hours_Fixed_numeric)
+betareg_combined_m0 <- betareg(DV200_prop ~ 1, data = combined)
+betareg_combined_m1 <- betareg(DV200_prop ~ Fixative, data = combined)
+betareg_combined_m2 <- betareg(DV200_prop ~ Hours_Fixed_numeric, data = combined)
+betareg_combined_m3 <- betareg(DV200_prop ~ Fixative * Hours_Fixed_numeric, data = combined)
+betareg_combined_m4 <- betareg(DV200_prop ~ Fixative * Hours_Fixed_numeric * Storage_Time, data = combined)
+betareg_combined_m5 <- betareg(DV200_prop ~ Fixative * Hours_Fixed_numeric + Storage_Time, data = combined)
+summary(betareg_combined_m0)
+summary(betareg_combined_m1)
+summary(betareg_combined_m2)
+summary(betareg_combined_m3)
+summary(betareg_combined_m4)
+summary(betareg_combined_m5)
+AIC(betareg_combined_m0, 
+    betareg_combined_m1, 
+    betareg_combined_m2, 
+    betareg_combined_m3, 
+    betareg_combined_m4, 
+    betareg_combined_m5)
+
+# Create Lines of Best Fit for each fixative type
+combined_pfa <- combined %>%
+  filter(combined$Fixative == "PFA")
+combined_mdf <- combined %>%
+  filter(combined$Fixative == "mDF")
+line_betareg_combined_m3 <- predict(betareg_combined_m5, combined)
+line_betareg_combined_m3_pfa <- predict(betareg_combined_m5, combined_pfa)
+line_betareg_combined_m3_mDF <- predict(betareg_combined_m5, combined_mdf)
+
+# Model Tabel (with p-values) for combined storage beta regression
+tab_model(betareg_combined_m5, p.style = "scientific")
