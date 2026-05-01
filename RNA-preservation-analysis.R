@@ -47,3 +47,29 @@ long$Fixative = factor(long$Fixative, levels = c("PFA", "mDF"))
 combined <- rbind(short, long)
 combined$Storage_Time = factor(combined$Storage_Time, levels = c("Short", "Long"))
 combined$Hours_Fixed = factor(combined$Hours_Fixed, levels = c("2", "6", "12", "24", "48"))
+
+### Beta Regression Analysis for All Groups
+
+## Short-term Storage
+short %>% group_by(Fixative, Hours_Fixed_numeric) %>% summarise(mean=mean(DV200_prop)) %>% arrange(Fixative,Hours_Fixed_numeric)
+betareg_short_m0 <- betareg(DV200_prop ~ 1, data = short)
+betareg_short_m1 <- betareg(DV200_prop ~ Fixative, data = short)
+betareg_short_m2 <- betareg(DV200_prop ~ Hours_Fixed_numeric, data = short)
+betareg_short_m3 <- betareg(DV200_prop ~ Fixative * Hours_Fixed_numeric, data = short)
+summary(betareg_short_m0)
+summary(betareg_short_m1)
+summary(betareg_short_m2)
+summary(betareg_short_m3)
+AIC(betareg_short_m0, betareg_short_m1, betareg_short_m2, betareg_short_m3)
+
+# Create Lines of Best Fit for each fixative type
+short_pfa <- short %>%
+  filter(short$Fixative == "PFA")
+short_mdf <- short %>%
+  filter(short$Fixative == "mDF")
+line_betareg_short_m3 <- predict(betareg_short_m3, short)
+line_betareg_short_m3_pfa <- predict(betareg_short_m3, short_pfa)
+line_betareg_short_m3_mDF <- predict(betareg_short_m3, short_mdf)
+
+# Model Tabel (with p-values) for short-term beta regression
+tab_model(betareg_short_m3, p.style = "scientific")
