@@ -1,5 +1,3 @@
-# Insert DV200 Analysis scripts here!
-
 # Install Required Packages
 install.packages(c("readxl", 
                    "agricolae", 
@@ -138,3 +136,10 @@ line_betareg_combined_m3_mDF <- predict(betareg_combined_m5, combined_mdf)
 
 # Model Tabel (with p-values) for combined storage beta regression
 tab_model(betareg_combined_m5, p.style = "scientific")
+
+
+
+### Making Figures
+
+## Short-Term Storage Plots
+
