@@ -142,4 +142,8 @@ tab_model(betareg_combined_m5, p.style = "scientific")
 ### Making Figures
 
 ## Short-Term Storage Plots
+# note to self - try making different plot for short vs long term fixation
+# - separate by fixative and color the short vs long term samples
+# - same axis, shows difference in intercept clearly while also differentiating the slopes of the fixative lines
+# - check in with Katinka/Murillo about it to see if that works well
 
