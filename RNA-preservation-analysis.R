@@ -146,4 +146,12 @@ tab_model(betareg_combined_m5, p.style = "scientific")
 # - separate by fixative and color the short vs long term samples
 # - same axis, shows difference in intercept clearly while also differentiating the slopes of the fixative lines
 # - check in with Katinka/Murillo about it to see if that works well
-
+correct <- ggplot(short, 
+                  aes(x = Hours_Fixed_numeric, 
+                      y = DV200_prop, 
+                      color = Fixative)) + geom_point(aes(shape = Animal_Number)) + geom_boxplot(aes(group = Hours_Fixed), outliers = FALSE) + geom_line(data = data.frame(Fixative = c(short$Fixative), 
+                                                                                           Hours_Fixed_numeric = c(short$Hours_Fixed_numeric), 
+                                                                                           DV200_prop = c(predict(betareg_short_m3, short)), 
+                                                                                           Animal_Number = c(short$Animal_Number)), 
+                                                                         linewidth = 2) + ylim(0, 1) + facet_wrap(facets = vars(Fixative))
+correct
