@@ -164,3 +164,18 @@ long_storage_plot <- ggplot(long,
                                                                                                                                                                                                                                                                                            Animal_Number = c(long$Animal_Number)), 
                                                                                                                                                                                                                                                                          linewidth = 2) + ylim(0, 1) + facet_wrap(facets = vars(Fixative))
 long_storage_plot
+
+## Combined Storage Plot
+combined_storage_plot <- ggplot(combined, 
+                             aes(x = Hours_Fixed_numeric, 
+                                 y = DV200_prop)) + geom_boxplot(aes(group = Hours_Fixed), outliers = FALSE) + geom_point(aes(shape = Animal_Number, 
+                                                                    color = Hours_Fixed, 
+                                                                    stroke = 1), 
+                                                                size = 1.5, 
+                                                                position = "jitter") + scale_shape_manual(values = 0:2)  + geom_line(data = data.frame(Fixative = c(combined$Fixative),
+                                                                                                                                                        Hours_Fixed_numeric = c(combined$Hours_Fixed_numeric),
+                                                                                                                                                        DV200_prop = c(predict(betareg_combined_m5, combined)),
+                                                                                                                                                        Animal_Number = c(combined$Animal_Number),
+                                                                                                                                                        Storage_Time = c(combined$Storage_Time)),
+                                                                                                                                      linewidth = 2) + ylim(0, 1) + facet_wrap(facets = vars(Fixative, Storage_Time))
+combined_storage_plot
