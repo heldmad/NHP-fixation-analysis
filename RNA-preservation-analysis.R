@@ -154,3 +154,13 @@ short_storage_plot <- ggplot(short,
                                                                                            Animal_Number = c(short$Animal_Number)), 
                                                                          linewidth = 2) + ylim(0, 1) + facet_wrap(facets = vars(Fixative))
 short_storage_plot
+
+## Long-Term Storage Plots
+long_storage_plot <- ggplot(long, 
+                             aes(x = Hours_Fixed_numeric, 
+                                 y = DV200_prop)) + geom_boxplot(aes(group = Hours_Fixed), outliers = FALSE) + geom_point(aes(shape = Animal_Number, color = Hours_Fixed, stroke = 1), size = 1.5, position = "jitter") +  scale_shape_manual(values = 0:2)  + geom_line(data = data.frame(Fixative = c(long$Fixative), 
+                                                                                                                                                                                                                                                                                           Hours_Fixed_numeric = c(long$Hours_Fixed_numeric), 
+                                                                                                                                                                                                                                                                                           DV200_prop = c(predict(betareg_long_m3, long)), 
+                                                                                                                                                                                                                                                                                           Animal_Number = c(long$Animal_Number)), 
+                                                                                                                                                                                                                                                                         linewidth = 2) + ylim(0, 1) + facet_wrap(facets = vars(Fixative))
+long_storage_plot
