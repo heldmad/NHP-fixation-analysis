@@ -3,13 +3,27 @@ install.packages(c("tidyverse,
                    readxl",
                    "car",
                    "modelbased",
-                   "ggsignif"))
+                   "ggsignif",
+                   "agricolae",
+                   "lme4",
+                   "AICcmodavg",
+                   "sjPlot",
+                   "jtools",
+                   "betareg",
+                   "ggeffects"))
 # Load Required Packages
 library(tidyverse)
 library(readxl)
 library(car)
 library(modelbased)
 library(ggsignif)
+library(agricolae)
+library(lme4)
+library(AICcmodavg)
+library(sjPlot)
+library(jtools)
+library(betareg)
+library(ggeffects)
 
 # Read in Data
 hemaxl <- read_excel("/Users/heldm/Library/CloudStorage/OneDrive-SharedLibraries-OregonHealth&ScienceUniversity/PC.Conrad Lab - wet lab/Experiment Results/Histology Optimization & Troubleshooting - HOT/MMH NHP Fixation Project/NHP-fixative-text_PAS-H-pixelclassification.xlsx")
@@ -17,6 +31,7 @@ hemaxl <- as.data.frame(hemaxl)
 hemaxl$hem_pos <- as.numeric(hemaxl$hem_pos)
 hemaxl$hem_neg <- as.numeric(hemaxl$hem_neg)
 hemaxl$Hours_Fixed <- as.numeric(hemaxl$Hours_Fixed)
+hemaxl <- mutate(hemaxl, hem_pos_int = hem_pos/100, hem_neg_int = hem_neg/100)
 
 ## Assess Normality
 # Create Test Condition Groups
@@ -82,8 +97,38 @@ pos_result <- aov(hem_pos ~ Hours_Fixed * Fixative, data = hemaxl)
 summary(pos_result)
 marginal_means_fix <- estimate_means(pos_result, by = "Fixative")
 marginal_means_fix
+marginal_means_hours <- estimate_means(pos_result, by = "Hours_Fixed")
+marginal_means_hours
 
+# Run beta regression - positive hematoxylin stain
+hemaxl %>% na.omit() %>% group_by(Fixative, Hours_Fixed) %>% summarise(mean=mean(hem_pos_int)) %>% arrange(Fixative,Hours_Fixed)
+hemaxl_br0 <- betareg(hem_pos_int ~ 1, data = hemaxl)
+summary(hemaxl_br0)
+
+hemaxl_br1 <- betareg(hem_pos_int ~ Fixative, data = hemaxl)
+summary(hemaxl_br1)
+
+hemaxl_br2 <- betareg(hem_pos_int ~ Hours_Fixed, data = hemaxl)
+summary(hemaxl_br2)
+
+hemaxl_br3 <- betareg(hem_pos_int ~ Fixative * Hours_Fixed, data = hemaxl)
+summary(hemaxl_br3)
+
+hemaxl_br4 <- betareg(hem_pos_int ~ Fixative + Hours_Fixed, data = hemaxl)
+summary(hemaxl_br4)
+
+AIC(hemaxl_br0,
+    hemaxl_br1,
+    hemaxl_br2,
+    hemaxl_br3,
+    hemaxl_br4)
 
 # Make Plot
-ggplot(hemaxl, aes(x = Fixative, y = hem_pos)) + geom_boxplot() + stat_anova_test(data = pos_result)
+pred <- ggpredict(hemaxl_br4, terms = c("Fixative", "Hours_Fixed"))
+plot(pred)
 
+ggplot(hemaxl, aes(x = Hours_Fixed, y = hem_pos_int, fill = Fixative)) + geom_violin(aes(group = Hours_Fixed)) + geom_smooth(data = data.frame(Fixative = c(hemaxl$Fixative), 
+                                                                                                 Hours_Fixed = c(hemaxl$Hours_Fixed), 
+                                                                                                 hem_pos_int = c(predict(hemaxl_br4, hemaxl)))) + facet_wrap(facets = vars(Fixative))
+                                                                            
+                                                                                              
