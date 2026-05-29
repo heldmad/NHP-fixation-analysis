@@ -123,6 +123,9 @@ AIC(hemaxl_br0,
     hemaxl_br3,
     hemaxl_br4)
 
+plot(hemaxl_br2)
+plot(hemaxl_br4)
+
 # Make Plot
 pred <- ggpredict(hemaxl_br4, terms = c("Fixative", "Hours_Fixed"))
 plot(pred)
