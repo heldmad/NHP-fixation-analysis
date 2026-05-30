@@ -2,28 +2,23 @@
 install.packages(c("tidyverse,
                    readxl",
                    "car",
-                   "modelbased",
-                   "ggsignif",
                    "agricolae",
                    "lme4",
                    "AICcmodavg",
                    "sjPlot",
                    "jtools",
-                   "betareg",
-                   "ggeffects"))
+                   "betareg"))
 # Load Required Packages
 library(tidyverse)
 library(readxl)
 library(car)
-library(modelbased)
-library(ggsignif)
 library(agricolae)
 library(lme4)
 library(AICcmodavg)
 library(sjPlot)
 library(jtools)
 library(betareg)
-library(ggeffects)
+
 
 # Read in Data
 hemaxl <- read_excel("/Users/heldm/Library/CloudStorage/OneDrive-SharedLibraries-OregonHealth&ScienceUniversity/PC.Conrad Lab - wet lab/Experiment Results/Histology Optimization & Troubleshooting - HOT/MMH NHP Fixation Project/NHP-fixative-text_PAS-H-pixelclassification.xlsx")
