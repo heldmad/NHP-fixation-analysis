@@ -83,7 +83,7 @@ pfa48pos <- shapiro.test(pfa48$hem_pos)
 pfa48neg <- shapiro.test(pfa48$hem_neg)
 c(pfa48pos, pfa48neg)
 
-# Levene Test to assess equality of variances - Not equally distributed moving forward with beta regression
+# Levene Test to assess equality of variances - Not equally distributed; moving forward with beta regression
 hemaxl <- mutate(hemaxl, Hours_Fixed_factor = as.factor(hemaxl$Hours_Fixed))
 pos <- leveneTest(hem_pos ~ Hours_Fixed_factor * Fixative, data = hemaxl)
 neg <- leveneTest(hem_neg ~ Hours_Fixed_factor * Fixative, data = hemaxl)
@@ -91,7 +91,12 @@ c(pos, neg)
 
 
 # Run beta regression - positive hematoxylin stain
-hemaxl_avg %>% na.omit() %>% group_by(Fixative, Hours_Fixed) %>% summarise(mean=mean(hem_pos_int)) %>% arrange(Fixative,Hours_Fixed)
+hemaxl_avg %>% 
+  na.omit() %>% 
+  group_by(Fixative, Hours_Fixed) %>% 
+  summarise(mean=mean(hem_pos_int)) %>% 
+  arrange(Fixative,Hours_Fixed)
+
 hemaxl_br0 <- betareg(hem_pos_int ~ 1, data = hemaxl_avg)
 summary(hemaxl_br0)
 
@@ -115,14 +120,6 @@ AIC(hemaxl_br0,
 
 plot(hemaxl_br2)
 plot(hemaxl_br4)
-
-sig_values_br4 <- tribble(~"Predictor", ~"pval", ~"sig_symbol",
-                          "Intercept", 2e-16, "***",
-                          "Fixative", 2e-16, "***", 
-                          "Hours Fixed", 0.000239, "***") %>%
-  as.data.frame()
-
-
 
 # Make Plot
 pred <- predict(hemaxl_br4, hemaxl_avg)
