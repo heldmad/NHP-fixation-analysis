@@ -32,19 +32,20 @@ hemaxl$hem_pos <- as.numeric(hemaxl$hem_pos)
 hemaxl$hem_neg <- as.numeric(hemaxl$hem_neg)
 hemaxl$Hours_Fixed <- as.numeric(hemaxl$Hours_Fixed)
 hemaxl <- mutate(hemaxl, hem_pos_int = hem_pos/100, hem_neg_int = hem_neg/100)
+hemaxl_avg <- hemaxl[hemaxl$Square_Number == "avg",]
 
 ## Assess Normality
 # Create Test Condition Groups
-mdf2 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 2,]
-mdf6 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 6,]
-mdf12 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 12,]
-mdf24 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 24,]
-mdf48 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 48,]
-pfa2 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 2,]
-pfa6 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 6,]
-pfa12 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 12,]
-pfa24 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 24,]
-pfa48 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 48,]
+mdf2 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 2 & hemaxl$Square_Number != "avg",]
+mdf6 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 6 & hemaxl$Square_Number != "avg",]
+mdf12 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 12 & hemaxl$Square_Number != "avg",]
+mdf24 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 24 & hemaxl$Square_Number != "avg",]
+mdf48 <- hemaxl[hemaxl$Fixative == "mDF" & hemaxl$Hours_Fixed == 48 & hemaxl$Square_Number != "avg",]
+pfa2 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 2 & hemaxl$Square_Number != "avg",]
+pfa6 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 6 & hemaxl$Square_Number != "avg",]
+pfa12 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 12 & hemaxl$Square_Number != "avg",]
+pfa24 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 24 & hemaxl$Square_Number != "avg",]
+pfa48 <- hemaxl[hemaxl$Fixative == "PFA" & hemaxl$Hours_Fixed == 48 & hemaxl$Square_Number != "avg",]
 
 # Shapiro Wilk Test to Assess Normality
 mdf2pos <- shapiro.test(mdf2$hem_pos)
@@ -87,34 +88,28 @@ pfa48pos <- shapiro.test(pfa48$hem_pos)
 pfa48neg <- shapiro.test(pfa48$hem_neg)
 c(pfa48pos, pfa48neg)
 
-# Levene Test to assess equality of variances
+# Levene Test to assess equality of variances - Not equally distributed moving forward with beta regression
 hemaxl <- mutate(hemaxl, Hours_Fixed_factor = as.factor(hemaxl$Hours_Fixed))
 pos <- leveneTest(hem_pos ~ Hours_Fixed_factor * Fixative, data = hemaxl)
 neg <- leveneTest(hem_neg ~ Hours_Fixed_factor * Fixative, data = hemaxl)
+c(pos, neg)
 
-# Run 2-way ANOVA - positive hematoxylin stain
-pos_result <- aov(hem_pos ~ Hours_Fixed * Fixative, data = hemaxl)
-summary(pos_result)
-marginal_means_fix <- estimate_means(pos_result, by = "Fixative")
-marginal_means_fix
-marginal_means_hours <- estimate_means(pos_result, by = "Hours_Fixed")
-marginal_means_hours
 
 # Run beta regression - positive hematoxylin stain
-hemaxl %>% na.omit() %>% group_by(Fixative, Hours_Fixed) %>% summarise(mean=mean(hem_pos_int)) %>% arrange(Fixative,Hours_Fixed)
-hemaxl_br0 <- betareg(hem_pos_int ~ 1, data = hemaxl)
+hemaxl_avg %>% na.omit() %>% group_by(Fixative, Hours_Fixed) %>% summarise(mean=mean(hem_pos_int)) %>% arrange(Fixative,Hours_Fixed)
+hemaxl_br0 <- betareg(hem_pos_int ~ 1, data = hemaxl_avg)
 summary(hemaxl_br0)
 
-hemaxl_br1 <- betareg(hem_pos_int ~ Fixative, data = hemaxl)
+hemaxl_br1 <- betareg(hem_pos_int ~ Fixative, data = hemaxl_avg)
 summary(hemaxl_br1)
 
-hemaxl_br2 <- betareg(hem_pos_int ~ Hours_Fixed, data = hemaxl)
+hemaxl_br2 <- betareg(hem_pos_int ~ Hours_Fixed, data = hemaxl_avg)
 summary(hemaxl_br2)
 
-hemaxl_br3 <- betareg(hem_pos_int ~ Fixative * Hours_Fixed, data = hemaxl)
+hemaxl_br3 <- betareg(hem_pos_int ~ Fixative * Hours_Fixed, data = hemaxl_avg)
 summary(hemaxl_br3)
 
-hemaxl_br4 <- betareg(hem_pos_int ~ Fixative + Hours_Fixed, data = hemaxl)
+hemaxl_br4 <- betareg(hem_pos_int ~ Fixative + Hours_Fixed, data = hemaxl_avg)
 summary(hemaxl_br4)
 
 AIC(hemaxl_br0,
@@ -126,12 +121,26 @@ AIC(hemaxl_br0,
 plot(hemaxl_br2)
 plot(hemaxl_br4)
 
-# Make Plot
-pred <- ggpredict(hemaxl_br4, terms = c("Fixative", "Hours_Fixed"))
-plot(pred)
+sig_values_br4 <- tribble(~"Predictor", ~"pval", ~"sig_symbol",
+                          "Intercept", 2e-16, "***",
+                          "Fixative", 2e-16, "***", 
+                          "Hours Fixed", 0.000239, "***") %>%
+  as.data.frame()
 
-ggplot(hemaxl, aes(x = Hours_Fixed, y = hem_pos_int, fill = Fixative)) + geom_violin(aes(group = Hours_Fixed)) + geom_smooth(data = data.frame(Fixative = c(hemaxl$Fixative), 
-                                                                                                 Hours_Fixed = c(hemaxl$Hours_Fixed), 
-                                                                                                 hem_pos_int = c(predict(hemaxl_br4, hemaxl)))) + facet_wrap(facets = vars(Fixative))
-                                                                            
+
+
+# Make Plot
+pred <- predict(hemaxl_br4, hemaxl_avg)
+View(pred)
+
+ggplot(hemaxl_avg, 
+       aes(x = Hours_Fixed, 
+           y = hem_pos_int, 
+           color = Fixative, 
+           shape = Animal_Number)) + geom_segment(aes(x = 55, xend = 55, y = 0.7759819, yend = 0.9210099), inherit.aes = FALSE) + geom_segment(aes(x = 50, xend = 55, y = 0.7759819, yend = 0.7759819), inherit.aes = FALSE) + geom_segment(aes(x = 50, xend = 55, y = 0.9210099, yend = 0.9210099), inherit.aes = FALSE) + annotate("text", label = "***", x = 60, y = 0.85, size = 5) + geom_point() + geom_line(data = data.frame(Fixative = c(hemaxl_avg$Fixative), 
+                                                                                Hours_Fixed = c(hemaxl_avg$Hours_Fixed), 
+                                                                                hem_pos_int = c(predict(hemaxl_br4, hemaxl_avg)), 
+                                                                                Animal_Number = c(hemaxl_avg$Animal_Number), 
+                                                                                linewidth = 5)) + ylim(0.5, 1) + theme_bw() + scale_color_brewer(palette = "Dark2") + labs(x = "Number of Hours Fixed", y = "Proportion of Hematoxylin-Positive Pixels per Sample", shape = "Animal Replicate ID", color = "Fixative Used")
+
                                                                                               
